@@ -1,0 +1,15 @@
+{
+  "originHash" : "d62a7e65fc8956eb2b383760ef0d0a5f06d9c958684af10e68089a2778ec43eb",
+  "pins" : [
+    {
+      "identity" : "swiftui-fetching-view",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ratnesh-jain/swiftui-fetching-view",
+      "state" : {
+        "revision" : "e80a07b96c207e72a58d7252dfecbb077845b017",
+        "version" : "0.1.3"
+      }
+    }
+  ],
+  "version" : 3
+}
