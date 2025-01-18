@@ -15,12 +15,16 @@ public class AsyncImageView: UIView {
     public var url: URL? {
         didSet {
             if let url {
+                if let oldValue {
+                    self.imageView.image = nil
+                    Task { await AppImageDownloader.cancel(url: oldValue) }
+                }
                 self.configure(url: url)
             }
         }
     }
     
-    private lazy var imageView: UIImageView = {
+    public private(set) lazy var imageView: UIImageView = {
         let imageView = UIImageView(frame: .zero)
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -72,6 +76,11 @@ public class AsyncImageView: UIView {
     
     public subscript<T>(dynamicMember keyPath: ReferenceWritableKeyPath<UIImageView, T>) -> T {
         self.imageView[keyPath: keyPath]
+    }
+    
+    public func prepareForReuse() {
+        self.imageView.image = nil
+        self.url = nil
     }
 }
 #endif
