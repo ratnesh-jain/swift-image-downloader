@@ -13,6 +13,11 @@ dependencies: [
 - iOS 17+
 - macOS 15+
 
+## Example project/Usage
+- https://github.com/ratnesh-jain/SwiftImageDownloaderExample
+
+## Libraries
+
 This package offers 3 libraries:
 1. ImageDownloader
 2. AppAsyncImage for SwiftUI
