@@ -7,6 +7,9 @@ extension Target.Dependency {
     static var fetchingView: Self {
         .product(name: "FetchingView", package: "swiftui-fetching-view")
     }
+    static var dependencies: Self {
+        .product(name: "Dependencies", package: "swift-dependencies")
+    }
 }
 
 let package = Package(
@@ -30,10 +33,16 @@ let package = Package(
         .package(
             url: "https://github.com/ratnesh-jain/swiftui-fetching-view",
             .upToNextMajor(from: "0.1.0")
+        ),
+        .package(
+            url: "https://github.com/pointfreeco/swift-dependencies",
+            .upToNextMajor(from: "1.0.0")
         )
     ],
     targets: [
-        .target(name: "ImageDownloader"),
+        .target(name: "StorageClient", dependencies: [.dependencies]),
+        .target(name: "CacheConfigClient", dependencies: [.dependencies]),
+        .target(name: "ImageDownloader", dependencies: ["CacheConfigClient", "StorageClient"]),
         .target(name: "AsyncImageView", dependencies: ["ImageDownloader"]),
         .target(name: "AppAsyncImage", dependencies: [.fetchingView, "ImageDownloader"]),
     ]

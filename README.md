@@ -42,6 +42,43 @@ User can use these apis for directly downloading/caching of the remote images wi
 ColorValue is a simple `Equatable` and `Sendable` type to hold RGBA value of Color information.
 This library calculates and caches the average color from an Image using `CIAreaAverage` CIFilter.
 
+
+## Configuration
+Cache Storage Configuration:
+- To configure the Cache storage url use:
+    `$0.storageClient.imageCachePath = { URL.temporaryDirectory.appending(path: "Images") }`
+    
+- To configure the Cache values:
+    ```swift
+    $0.imageCacheConfig.totalCostLimit = { 10 }
+    $0.imageCacheConfig.countLimit = { 0 }
+    ```
+
+### Configuration Example
+
+```swift
+import Dependencies
+import ImageDownloader
+import SwiftUI
+
+@Main
+struct MainApp: App {
+    init() {
+        prepareDependencies {
+            $0.colorCacheConfig.allowCache = { false }
+            $0.imageCacheConfig.totalCostLimit = { 10 }
+            $0.storageClient.imageCachePath = { URL.temporaryDirectory.appending(path: "Images") }
+        }
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
 ## AppAsyncImage for SwiftUI
 AppAsyncImage is a SwiftUI View to display a remote image using URL.
 ```swift

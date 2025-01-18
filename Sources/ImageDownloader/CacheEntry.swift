@@ -7,8 +7,15 @@
 
 import Foundation
 
+class CacheEntry {
+    var state: ImageDownloader.TaskState
+    
+    init(state: ImageDownloader.TaskState) {
+        self.state = state
+    }
+}
 
-extension NSCache where KeyType == NSString, ObjectType == ImageDownloader.CacheEntry  {
+extension NSCache where KeyType == NSString, ObjectType == CacheEntry  {
     subscript(url: URL) -> ImageDownloader.TaskState? {
         get {
             let key = url.absoluteString as NSString
@@ -18,7 +25,7 @@ extension NSCache where KeyType == NSString, ObjectType == ImageDownloader.Cache
         set {
             let key = url.absoluteString as NSString
             if let state = newValue {
-                let value = ImageDownloader.CacheEntry(state: state)
+                let value = CacheEntry(state: state)
                 self.setObject(value, forKey: key)
             } else {
                 removeObject(forKey: key)
@@ -27,7 +34,15 @@ extension NSCache where KeyType == NSString, ObjectType == ImageDownloader.Cache
     }
 }
 
-extension NSCache where KeyType == NSString, ObjectType == ImageDownloader.ColorEntry {
+class ColorEntry {
+    var colorValue: ColorValue
+    
+    init(colorValue: ColorValue) {
+        self.colorValue = colorValue
+    }
+}
+
+extension NSCache where KeyType == NSString, ObjectType == ColorEntry {
     subscript(url: URL) -> ColorValue? {
         get {
             let key = url.absoluteString as NSString

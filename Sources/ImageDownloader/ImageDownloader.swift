@@ -5,6 +5,8 @@
 //  Created by Ratnesh Jain on 17/01/25.
 //
 
+import CacheConfigClient
+import Dependencies
 import Foundation
 #if os(iOS)
 import UIKit
@@ -14,6 +16,8 @@ import OSLog
 #if os(macOS)
 import AppKit
 #endif
+
+import StorageClient
 
 /// An Image Download actor.
 ///
@@ -44,31 +48,31 @@ actor ImageDownloader {
         }
     }
     
-    class CacheEntry {
-        var state: TaskState
-        
-        init(state: TaskState) {
-            self.state = state
-        }
-    }
-    
-    class ColorEntry {
-        var colorValue: ColorValue
-        
-        init(colorValue: ColorValue) {
-            self.colorValue = colorValue
-        }
-    }
+    @Dependency(\.imageCacheConfig) var imageCacheConfig
+    @Dependency(\.colorCacheConfig) var colorCacheConfig
     
     #if !os(tvOS)
     /// A common path for the local file system cache directory path.
-    private let localBaseURL = URL.documentsDirectory.appending(path: "Images")
+    private lazy var localBaseURL: URL = {
+        @Dependency(\.storageClient) var storageClient
+        return storageClient.imageCachePath()
+    }()
     #endif
     
     /// A local dictionary to store the current download task state with corresponding to the remote url.
-    private var cache: NSCache<NSString, CacheEntry> = .init()
+    private lazy var cache: NSCache<NSString, CacheEntry> = {
+        let cache = NSCache<NSString, CacheEntry>()
+        cache.countLimit = imageCacheConfig.countLimit()
+        cache.totalCostLimit = imageCacheConfig.totalCostLimit()
+        return cache
+    }()
     
-    private var colorCache: NSCache<NSString, ColorEntry> = .init()
+    private lazy var colorCache: NSCache<NSString, ColorEntry> = {
+        let cache = NSCache<NSString, ColorEntry>()
+        cache.countLimit = colorCacheConfig.countLimit()
+        cache.totalCostLimit = colorCacheConfig.totalCostLimit()
+        return cache
+    }()
 
     /// Downloads the image from the remote url.
     /// - Parameter url: Remote server address for the target image.
@@ -90,7 +94,9 @@ actor ImageDownloader {
         if let localImage = self.localImage(for: url) {
             log("In memory cache is empty but found image on the file system for: \(url)")
             self.cache[url] = .ready(localImage)
-            self.colorCache[url] = localImage.averageColor
+            if colorCacheConfig.allowCache() {
+                self.colorCache[url] = localImage.averageColor
+            }
             return localImage
         }
         #endif
@@ -106,7 +112,9 @@ actor ImageDownloader {
             case .inProgress(let task):
                 let image = try await task.value
                 self.cache[url] = .ready(image)
-                self.colorCache[url] = image.averageColor
+                if colorCacheConfig.allowCache() {
+                    self.colorCache[url] = image.averageColor
+                }
                 #if !os(tvOS)
                 try self.store(image: image, for: url)
                 #endif
@@ -136,7 +144,9 @@ actor ImageDownloader {
         do {
             let image = try await task.value
             self.cache[url] = .ready(image)
-            self.colorCache[url] = image.averageColor
+            if colorCacheConfig.allowCache() {
+                self.colorCache[url] = image.averageColor
+            }
             #if !os(tvOS)
             try self.store(image: image, for: url)
             #endif
@@ -149,12 +159,27 @@ actor ImageDownloader {
     }
     
     func imageColor(for url: URL) -> ColorValue? {
+        guard colorCacheConfig.allowCache() else {
+            reportIssue(
+                """
+                Accessing color value when color caching is disabled. 
+                This will cause increase the CPU Usage when color caching is disabled.
+                You can enable the color caching at app launch like:
+                _ = prepareDependencies {
+                    $0.colorCacheConfig.allowCache = { true }
+                }
+                """
+            )
+            return nil
+        }
         if let color = self.colorCache[url] {
             self.logger.debug("Found the color cache for url: \(url)")
             return color
         } else {
             let color = self.cache[url]?.readyImage?.averageColor
-            self.colorCache[url] = color
+            if colorCacheConfig.allowCache() {
+                self.colorCache[url] = color
+            }
             self.logger.debug("Not Found the color cache for url: \(url), so created new entry!")
             return color
         }
