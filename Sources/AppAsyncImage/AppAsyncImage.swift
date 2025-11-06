@@ -31,13 +31,11 @@ public struct AppAsyncImage: View {
             Image(platformImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-        } onError: { message in
-            VStack {
-                Image(systemName: "exclamationmark.circle.fill")
-            }
-            .background(Color.accentColor.opacity(0.1))
-            .aspectRatio(contentMode: .fit)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } onFetching: {
+            ProgressView()
+                .id(UUID())
+        } onError: {
+            ImageErrorView()
         }
         .onChange(of: url, { oldValue, newValue in
             Task {
@@ -54,6 +52,17 @@ public struct AppAsyncImage: View {
             Task {
                 await AppImageDownloader.cancel(url: url)
             }
+        }
+    }
+    
+    struct ImageErrorView: View {
+        var body: some View {
+            VStack {
+                Image(systemName: "exclamationmark.circle.fill")
+            }
+            .background(Color.accentColor.opacity(0.1))
+            .aspectRatio(contentMode: .fit)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
     

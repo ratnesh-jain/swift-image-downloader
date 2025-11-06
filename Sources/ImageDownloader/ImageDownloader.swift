@@ -192,9 +192,9 @@ actor ImageDownloader {
             if case .inProgress(let task) = cacheEntry {
                 task.cancel()
                 log("Cancelled image downloading for: \(url)")
+                self.cache[url] = nil
+                self.colorCache[url] = nil
             }
-            self.cache[url] = nil
-            self.colorCache[url] = nil
         }
     }
     
