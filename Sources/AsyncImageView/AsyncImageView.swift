@@ -7,6 +7,7 @@
 
 #if canImport(UIKit)
 import Foundation
+import FetchingView
 import ImageDownloader
 import UIKit
 
@@ -24,6 +25,10 @@ public class AsyncImageView: UIView {
         }
     }
     
+    public var onStateChange: ((FetchingState<UIImage>) -> Void)?
+    
+    public var placeholder: UIImage?
+    
     public private(set) lazy var imageView: UIImageView = {
         let imageView = UIImageView(frame: .zero)
         imageView.contentMode = .scaleAspectFit
@@ -32,7 +37,7 @@ public class AsyncImageView: UIView {
     }()
     
     private lazy var activityIndicatorView: UIActivityIndicatorView = {
-        let indicatorView = UIActivityIndicatorView(style: .large)
+        let indicatorView = UIActivityIndicatorView(style: .medium)
         indicatorView.translatesAutoresizingMaskIntoConstraints = false
         indicatorView.hidesWhenStopped = true
         return indicatorView
@@ -68,9 +73,18 @@ public class AsyncImageView: UIView {
     private func configure(url: URL) {
         Task { @MainActor in
             self.activityIndicatorView.startAnimating()
-            let image = try await AppImageDownloader.download(url: url)
-            self.imageView.image = image
-            self.activityIndicatorView.stopAnimating()
+            defer {
+                self.activityIndicatorView.stopAnimating()
+            }
+            self.onStateChange?(.fetching)
+            do {
+                let image = try await AppImageDownloader.download(url: url)
+                self.imageView.image = image
+                self.onStateChange?(.fetched(image))
+            } catch {
+                self.imageView.image = placeholder
+                self.onStateChange?(.error(message: error.localizedDescription))
+            }
         }
     }
     

@@ -43,7 +43,7 @@ let package = Package(
         .target(name: "StorageClient", dependencies: [.dependencies]),
         .target(name: "CacheConfigClient", dependencies: [.dependencies]),
         .target(name: "ImageDownloader", dependencies: ["CacheConfigClient", "StorageClient"]),
-        .target(name: "AsyncImageView", dependencies: ["ImageDownloader"]),
+        .target(name: "AsyncImageView", dependencies: [.fetchingView, "ImageDownloader"]),
         .target(name: "AppAsyncImage", dependencies: [.fetchingView, "ImageDownloader"]),
     ]
 )

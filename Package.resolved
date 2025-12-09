@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ratnesh-jain/swiftui-fetching-view",
       "state" : {
-        "revision" : "f1c8742c6cb1a8174614d9e63791150681d08d76",
-        "version" : "0.2.0"
+        "revision" : "e80a07b96c207e72a58d7252dfecbb077845b017",
+        "version" : "0.1.3"
       }
     },
     {
