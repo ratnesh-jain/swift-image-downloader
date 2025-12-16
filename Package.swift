@@ -10,6 +10,9 @@ extension Target.Dependency {
     static var dependencies: Self {
         .product(name: "Dependencies", package: "swift-dependencies")
     }
+    static var dependenciesMacros: Self {
+        .product(name: "DependenciesMacros", package: "swift-dependencies")
+    }
 }
 
 let package = Package(
@@ -42,7 +45,7 @@ let package = Package(
     targets: [
         .target(name: "StorageClient", dependencies: [.dependencies]),
         .target(name: "CacheConfigClient", dependencies: [.dependencies]),
-        .target(name: "ImageDownloader", dependencies: ["CacheConfigClient", "StorageClient"]),
+        .target(name: "ImageDownloader", dependencies: ["CacheConfigClient", "StorageClient", .dependenciesMacros]),
         .target(name: "AsyncImageView", dependencies: [.fetchingView, "ImageDownloader"]),
         .target(name: "AppAsyncImage", dependencies: [.fetchingView, "ImageDownloader"]),
     ]

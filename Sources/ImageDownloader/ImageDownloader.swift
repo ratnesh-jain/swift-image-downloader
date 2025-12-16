@@ -203,7 +203,8 @@ actor ImageDownloader {
     /// - Returns: `UIImage` from the URLSession data task.
     private func downloadImage(url: URL) async throws -> PlatformImage {
         log("Downloading image from the remote server: \(url)")
-        let (data, _) = try await URLSession.shared.data(from: url)
+        @Dependency(\.defaultDownloadClient) var client
+        let data = try await client.download(url: url)
         if let image = PlatformImage(data: data) {
             return image
         } else {
