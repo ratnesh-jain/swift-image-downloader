@@ -31,7 +31,7 @@ extension DefaultDownloadClient: DependencyKey {
 }
 
 extension DependencyValues {
-    public var defaultDownloadClient: DefaultDownloadClient {
+    public var defaultDownloader: DefaultDownloadClient {
         get { self[DefaultDownloadClient.self] }
         set { self[DefaultDownloadClient.self] = newValue }
     }

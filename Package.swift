@@ -31,6 +31,14 @@ let package = Package(
             name: "AppAsyncImage",
             targets: ["AppAsyncImage"]
         ),
+        .library(
+            name: "DefaultDownloaderClient",
+            targets: ["DefaultDownloaderClient"]
+        ),
+        .library(
+            name: "LinkPresentationDownloaderClient",
+            targets: ["LinkPresentationDownloaderClient"]
+        ),
     ],
     dependencies: [
         .package(
@@ -45,7 +53,9 @@ let package = Package(
     targets: [
         .target(name: "StorageClient", dependencies: [.dependencies]),
         .target(name: "CacheConfigClient", dependencies: [.dependencies]),
-        .target(name: "ImageDownloader", dependencies: ["CacheConfigClient", "StorageClient", .dependenciesMacros]),
+        .target(name: "DefaultDownloaderClient", dependencies: [.dependencies, .dependenciesMacros]),
+        .target(name: "LinkPresentationDownloaderClient", dependencies: ["DefaultDownloaderClient"]),
+        .target(name: "ImageDownloader", dependencies: ["CacheConfigClient", "StorageClient", "DefaultDownloaderClient"]),
         .target(name: "AsyncImageView", dependencies: [.fetchingView, "ImageDownloader"]),
         .target(name: "AppAsyncImage", dependencies: [.fetchingView, "ImageDownloader"]),
     ]

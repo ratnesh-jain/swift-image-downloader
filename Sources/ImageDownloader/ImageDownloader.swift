@@ -7,6 +7,7 @@
 
 import CacheConfigClient
 import Dependencies
+import DefaultDownloaderClient
 import Foundation
 #if os(iOS)
 import UIKit
@@ -50,6 +51,7 @@ actor ImageDownloader {
     
     @Dependency(\.imageCacheConfig) var imageCacheConfig
     @Dependency(\.colorCacheConfig) var colorCacheConfig
+    @Dependency(\.defaultDownloader) var downloader
     
     #if !os(tvOS)
     /// A common path for the local file system cache directory path.
@@ -203,8 +205,7 @@ actor ImageDownloader {
     /// - Returns: `UIImage` from the URLSession data task.
     private func downloadImage(url: URL) async throws -> PlatformImage {
         log("Downloading image from the remote server: \(url)")
-        @Dependency(\.defaultDownloadClient) var client
-        let data = try await client.download(url: url)
+        let data = try await downloader.download(url: url)
         if let image = PlatformImage(data: data) {
             return image
         } else {

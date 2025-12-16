@@ -16,21 +16,53 @@ import ImageDownloader
 /// This is also handling the in progress and error state using `FetchingView`.
 /// In case of the reuse, `.onChange(of: url)` handles it properly.
 /// When the view is disappearing it will also cancel the in-flight download task to prevent resources.
+
+@MainActor
+@Observable
+final class AppAsyncImageStore {
+    let downloader: ImageDownloaderInstance
+    var fetchingState: FetchingState<PlatformImage> = .fetching
+    var retryCount: Int = 0
+    
+    init(downloader: ImageDownloaderInstance) {
+        self.downloader = downloader
+    }
+    
+    func fetch(url: URL) async {
+        guard self.fetchingState.value == nil, retryCount <= 3 else { return }
+        do {
+            self.fetchingState = .fetching
+            let image = try await downloader.download(url: url)
+            self.fetchingState = .fetched(image)
+        } catch {
+            self.retryCount += 1
+            self.fetchingState = .error(message: error.localizedDescription)
+        }
+    }
+    
+    func cancel(url: URL) async {
+        await downloader.cancel(url: url)
+    }
+}
+
 public struct AppAsyncImage: View {
     let url: URL
-    @State private var fetchingState: FetchingState<PlatformImage> = .fetching
+    let contentMode: ContentMode
+    let store: AppAsyncImageStore
     
     /// An Async Image view using a Application specific caching mechanics.
     /// - Parameter url: A remote image address.
-    public init(url: URL) {
+    public init(url: URL, contentMode: ContentMode = .fill, downloader: ImageDownloaderInstance = .defaultInstance) {
         self.url = url
+        self.contentMode = contentMode
+        self.store = .init(downloader: downloader)
     }
     
     public var body: some View {
-        FetchingView(fetchingState: fetchingState) { image in
+        FetchingView(fetchingState: store.fetchingState) { image in
             Image(platformImage: image)
                 .resizable()
-                .aspectRatio(contentMode: .fill)
+                .aspectRatio(contentMode: contentMode)
         } onFetching: {
             ProgressView()
                 .id(UUID())
@@ -39,20 +71,21 @@ public struct AppAsyncImage: View {
         }
         .onChange(of: url, { oldValue, newValue in
             Task {
-                await AppImageDownloader.cancel(url: oldValue)
-                await fetchImage(url: newValue)
+                await store.cancel(url: oldValue)
+                await store.fetch(url: newValue)
             }
         })
         .onAppear {
             Task {
-                await fetchImage(url: url)
+                await store.fetch(url: url)
             }
         }
         .onDisappear {
             Task {
-                await AppImageDownloader.cancel(url: url)
+                await store.cancel(url: url)
             }
         }
+        .id(url)
     }
     
     struct ImageErrorView: View {
@@ -63,20 +96,6 @@ public struct AppAsyncImage: View {
             .background(Color.accentColor.opacity(0.1))
             .aspectRatio(contentMode: .fit)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-    }
-    
-    /// Downloads the Image from the Remote image address using the `ImageDownloader` actor.
-    /// This will also handle the image fetching state via `fetchingState`.
-    /// - Parameter url: An Remote Image address.
-    private func fetchImage(url: URL) async {
-        guard self.fetchingState.value == nil else { return }
-        do {
-            self.fetchingState = .fetching
-            let image = try await AppImageDownloader.download(url: url)
-            self.fetchingState = .fetched(image)
-        } catch {
-            self.fetchingState = .error(message: error.localizedDescription)
         }
     }
 }

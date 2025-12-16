@@ -39,3 +39,40 @@ public enum AppImageDownloader {
         await downloader.imageColor(for: url)
     }
 }
+
+public struct ImageDownloaderInstance: Sendable {
+    let downloader = ImageDownloader()
+    
+    public init() {}
+    
+    public func download(url: URL) async throws -> PlatformImage {
+        try await downloader.download(url: url)
+    }
+    
+    public func cancel(url: URL) async {
+        await downloader.cancel(url: url)
+    }
+    
+    public func downloadAndCache(urls: [URL]) async throws {
+        try await withThrowingTaskGroup { group in
+            for url in urls {
+                group.addTask {
+                    _ = try await downloader.download(url: url)
+                }
+            }
+            try await group.waitForAll()
+        }
+    }
+    
+    public func clearCache(urls: [URL]) async {
+        await downloader.clearCache(urls: urls)
+    }
+    
+    public func color(for url: URL) async -> ColorValue? {
+        await downloader.imageColor(for: url)
+    }
+}
+
+extension ImageDownloaderInstance {
+    public static let defaultInstance: ImageDownloaderInstance = .init()
+}
