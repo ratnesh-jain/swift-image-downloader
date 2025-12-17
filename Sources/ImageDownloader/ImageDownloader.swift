@@ -133,8 +133,8 @@ actor ImageDownloader {
         log("New image download request for url: \(url)")
         // if all cache (in-memory and file-system) and in-flight task does not exists,
         // we create a `Task` to download the image data from the remote server url.
-        let task = Task<PlatformImage, Error> {
-            return try await downloadImage(url: url)
+        let task = Task<PlatformImage, Error>.detached(priority: .high) {
+            return try await self.downloadImage(url: url)
         }
         
         // We store the in task in inProgress state to cache.

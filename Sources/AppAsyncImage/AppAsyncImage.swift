@@ -22,20 +22,18 @@ import ImageDownloader
 final class AppAsyncImageStore {
     let downloader: ImageDownloaderInstance
     var fetchingState: FetchingState<PlatformImage> = .fetching
-    var retryCount: Int = 0
     
     init(downloader: ImageDownloaderInstance) {
         self.downloader = downloader
     }
     
     func fetch(url: URL) async {
-        guard self.fetchingState.value == nil, retryCount <= 3 else { return }
+        guard self.fetchingState.value == nil else { return }
         do {
             self.fetchingState = .fetching
             let image = try await downloader.download(url: url)
             self.fetchingState = .fetched(image)
         } catch {
-            self.retryCount += 1
             self.fetchingState = .error(message: error.localizedDescription)
         }
     }
@@ -48,14 +46,14 @@ final class AppAsyncImageStore {
 public struct AppAsyncImage: View {
     let url: URL
     let contentMode: ContentMode
-    let store: AppAsyncImageStore
+    @State var store: AppAsyncImageStore
     
     /// An Async Image view using a Application specific caching mechanics.
     /// - Parameter url: A remote image address.
     public init(url: URL, contentMode: ContentMode = .fill, downloader: ImageDownloaderInstance = .defaultInstance) {
         self.url = url
         self.contentMode = contentMode
-        self.store = .init(downloader: downloader)
+        self._store = .init(initialValue: .init(downloader: downloader))
     }
     
     public var body: some View {
@@ -76,16 +74,15 @@ public struct AppAsyncImage: View {
             }
         })
         .onAppear {
-            Task {
+            Task.detached {
                 await store.fetch(url: url)
             }
         }
         .onDisappear {
-            Task {
+            Task.detached {
                 await store.cancel(url: url)
             }
         }
-        .id(url)
     }
     
     struct ImageErrorView: View {
