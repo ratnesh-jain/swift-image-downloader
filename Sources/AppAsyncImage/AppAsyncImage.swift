@@ -28,7 +28,7 @@ final class AppAsyncImageStore {
     }
     
     func fetch(url: URL) async {
-        guard self.fetchingState.value == nil else { return }
+        guard self.fetchingState.value == nil && self.fetchingState.error == nil else { return }
         do {
             self.fetchingState = .fetching
             let image = try await downloader.download(url: url)
@@ -40,6 +40,7 @@ final class AppAsyncImageStore {
     
     func cancel(url: URL) async {
         await downloader.cancel(url: url)
+        self.fetchingState = .idle
     }
 }
 
@@ -74,12 +75,12 @@ public struct AppAsyncImage: View {
             }
         })
         .onAppear {
-            Task.detached {
+            Task {
                 await store.fetch(url: url)
             }
         }
         .onDisappear {
-            Task.detached {
+            Task {
                 await store.cancel(url: url)
             }
         }
