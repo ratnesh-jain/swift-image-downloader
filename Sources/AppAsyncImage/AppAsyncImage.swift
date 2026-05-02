@@ -40,7 +40,6 @@ final class AppAsyncImageStore {
     
     func cancel(url: URL) async {
         await downloader.cancel(url: url)
-        self.fetchingState = .idle
     }
 }
 
