@@ -28,7 +28,7 @@ final class AppAsyncImageStore {
     }
     
     func fetch(url: URL) async {
-        guard self.fetchingState.value == nil && self.fetchingState.error == nil else { return }
+        guard self.fetchingState.value == nil || !self.fetchingState.isFetching else { return }
         do {
             self.fetchingState = .fetching
             let image = try await downloader.download(url: url)
