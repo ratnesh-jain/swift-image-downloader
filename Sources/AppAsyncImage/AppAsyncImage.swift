@@ -28,7 +28,6 @@ final class AppAsyncImageStore {
     }
     
     func fetch(url: URL) async {
-        print("self.fetchingState: \(self.fetchingState)")
         guard self.fetchingState == .idle else { return }
         do {
             self.fetchingState = .fetching
@@ -40,7 +39,6 @@ final class AppAsyncImageStore {
         } catch {
             self.fetchingState = .error(message: error.localizedDescription)
         }
-        print("AFTER self.fetchingState = \(self.fetchingState)")
     }
     
     func cancel(url: URL) async {
@@ -66,8 +64,7 @@ public struct AppAsyncImage: View {
     }
     
     public var body: some View {
-        _ = Self._printChanges()
-        return FetchingView(fetchingState: store.fetchingState) { image in
+        FetchingView(fetchingState: store.fetchingState) { image in
             Image(platformImage: image)
                 .resizable()
                 .aspectRatio(contentMode: contentMode)
