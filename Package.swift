@@ -16,7 +16,7 @@ extension Target.Dependency {
 }
 
 let package = Package(
-    name: "SwiftImageDownloader",
+    name: "swift-image-downloader",
     platforms: [.iOS(.v17), .macOS(.v15)],
     products: [
         .library(

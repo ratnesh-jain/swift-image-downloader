@@ -82,8 +82,8 @@ actor ImageDownloader {
     /// downloading from the remote server address.
     func download(url: URL) async throws -> PlatformImage {
         
-        // Check for the in-memory cache, this is cheapter then file system
-        // reading, incresing the overall app performance.
+        // Check for the in-memory cache, this is cheaper then file system
+        // reading, increasing the overall app performance.
         if let readyImage = self.cache[url]?.readyImage {
             log("Image is available in the in memory cache for: \(url)")
             return readyImage
@@ -92,7 +92,7 @@ actor ImageDownloader {
         #if !os(tvOS)
         // If the in-memory cache does not have a downloaded image, then checking
         // for the local file system for the stored image.
-        // This is cheapter then the remote server image download.
+        // This is cheaper then the remote server image download.
         if let localImage = self.localImage(for: url) {
             log("In memory cache is empty but found image on the file system for: \(url)")
             self.cache[url] = .ready(localImage)
@@ -194,9 +194,9 @@ actor ImageDownloader {
             if case .inProgress(let task) = cacheEntry {
                 task.cancel()
                 log("Cancelled image downloading for: \(url)")
-                self.cache[url] = nil
-                self.colorCache[url] = nil
             }
+            self.cache[url] = nil
+            self.colorCache[url] = nil
         }
     }
     
