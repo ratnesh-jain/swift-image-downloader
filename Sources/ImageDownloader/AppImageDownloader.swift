@@ -38,6 +38,14 @@ public enum AppImageDownloader {
     public static func color(for url: URL) async -> ColorValue? {
         await downloader.imageColor(for: url)
     }
+    
+    public static func loadImageURL(for url: URL) async -> URL? {
+        await downloader.localImageURL(for: url)
+    }
+    
+    public static func destinationFileSystemURL(for url: URL) -> URL {
+        url.asyncImageDestinationFileSystemURL
+    }
 }
 
 public struct ImageDownloaderInstance: Sendable {
@@ -47,6 +55,10 @@ public struct ImageDownloaderInstance: Sendable {
     
     public func download(url: URL) async throws -> PlatformImage {
         try await downloader.download(url: url)
+    }
+    
+    public func localImageURL(for url: URL) async -> URL? {
+        await downloader.localImageURL(for: url)
     }
     
     public func cancel(url: URL) async {
@@ -70,6 +82,10 @@ public struct ImageDownloaderInstance: Sendable {
     
     public func color(for url: URL) async -> ColorValue? {
         await downloader.imageColor(for: url)
+    }
+    
+    public func destinationFileSystemURL(for url: URL) -> URL {
+        url.asyncImageDestinationFileSystemURL
     }
 }
 

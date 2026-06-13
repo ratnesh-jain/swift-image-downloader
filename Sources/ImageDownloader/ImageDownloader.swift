@@ -221,12 +221,8 @@ actor ImageDownloader {
     /// URL for file-system directory for local cache.
     /// - Parameter url: Remote server address of Image.
     /// - Returns: Local file-system url
-    private func localImageURL(for url: URL) -> URL {
-        let component = URLComponents(url: url, resolvingAgainstBaseURL: true)
-        let path = component?.path
-        let queries = component?.queryItems?.compactMap({$0.description}).joined()
-        let localPath = [path, queries].compactMap({$0}).joined()
-        return self.localBaseURL.appending(path: localPath)
+    func localImageURL(for url: URL) -> URL {
+        url.asyncImageDestinationFileSystemURL
     }
     
     /// Image from the local file-system.
@@ -264,5 +260,23 @@ actor ImageDownloader {
             self.colorCache[url] = nil
         }
         log("Cleared cache for urls: \(urls)")
+    }
+}
+
+extension URL {
+    public var asyncImageDestinationFileSystemPath: String {
+        let component = URLComponents(url: self, resolvingAgainstBaseURL: true)
+        let path = component?.path
+        let queries = component?.queryItems?.compactMap({$0.description}).joined()
+        let localPath = [path, queries].compactMap({$0}).joined()
+        return localPath
+    }
+    
+    /// Returns a fileSystemPath where the async image will be cached
+    ///
+    /// This uses the storageClient dependency.
+    public var asyncImageDestinationFileSystemURL: URL {
+        @Dependency(\.storageClient) var storageClient
+        return storageClient.imageCachePath().appending(path: self.asyncImageDestinationFileSystemPath)
     }
 }
