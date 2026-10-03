@@ -11,7 +11,7 @@ import Foundation
 import AppKit
 #endif
 
-#if os(iOS)
+#if canImport(UIKit)
 import UIKit
 #endif
 
@@ -46,7 +46,11 @@ public struct MacImage: @unchecked Sendable, Equatable {
     }
     
     public var data: Data? {
-        self.image.tiffRepresentation
+        guard let tiffData = self.image.tiffRepresentation,
+              let bitmapImage = NSBitmapImageRep(data: tiffData) else {
+            return nil
+        }
+        return bitmapImage.representation(using: .png, properties: [:])
     }
 }
 public typealias PlatformImage = MacImage
@@ -54,10 +58,10 @@ public typealias PlatformImage = MacImage
 public typealias PlatformImage = UIImage
 #endif
 
-#if os(iOS)
+#if canImport(UIKit)
 extension UIImage {
     public var data: Data? {
-        self.jpegData(compressionQuality: 0.35)
+        self.pngData() ?? self.jpegData(compressionQuality: 0.9)
     }
 }
 #endif
